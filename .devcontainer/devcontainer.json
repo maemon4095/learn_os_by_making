@@ -1,0 +1,29 @@
+{
+  "name": "${localWorkspaceFolderBasename}",
+  "dockerFile": "./Dockerfile",
+  "runArgs": [
+    "--tty",
+    "--name",
+    "${localWorkspaceFolderBasename}"
+  ],
+  "containerUser": "dev",
+  "mounts": [],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "workspaceFolder": "/${localWorkspaceFolderBasename}",
+  "forwardPorts": [
+    8080
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "ms-vscode.hexeditor"
+      ],
+      "settings": {
+        "editor.tabSize": 4,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
