@@ -1,0 +1,1 @@
+xxd -r -p img.hex > img.bin

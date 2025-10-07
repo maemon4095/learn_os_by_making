@@ -1,13 +1,24 @@
 {
   "name": "${localWorkspaceFolderBasename}",
-  "dockerFile": "./Dockerfile",
+  "build": {
+    "dockerfile": "./Dockerfile",
+    "args": {
+      "WORKSPACE": "${localWorkspaceFolderBasename}"
+    }
+  },
   "runArgs": [
     "--tty",
     "--name",
     "${localWorkspaceFolderBasename}"
   ],
   "containerUser": "dev",
-  "mounts": [],
+  "mounts": [
+    {
+      "type": "volume",
+      "source": "${localWorkspaceFolderBasename}_cache",
+      "target": "/${localWorkspaceFolderBasename}/.cache"
+    }
+  ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind,consistency=cached",
   "workspaceFolder": "/${localWorkspaceFolderBasename}",
   "forwardPorts": [
@@ -17,6 +28,7 @@
     "vscode": {
       "extensions": [
         "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
         "tamasfe.even-better-toml",
         "ms-vscode.hexeditor"
       ],

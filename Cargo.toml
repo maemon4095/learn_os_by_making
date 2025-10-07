@@ -1,0 +1,3 @@
+[workspace]
+members = ["*/repo/*"]
+resolver = "3"
