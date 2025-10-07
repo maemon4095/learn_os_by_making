@@ -1,2 +1,11 @@
 [build]
 target-dir = ".cache/target"
+target = "x86_64-unknown-uefi"
+rustflags = ["-Cforce-unwind-tables", "-Cforce-frame-pointers", "-Cno-redzone"]
+
+[unstable]
+build-std = ["core", "compiler_builtins", "alloc", "panic_abort"]
+build-std-features = ["compiler-builtins-mem"]
+
+[target.'cfg(target_os = "uefi")']
+runner = "bash scripts/launch_qemu.sh"
