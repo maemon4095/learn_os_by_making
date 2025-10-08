@@ -5,3 +5,7 @@ version = 3
 [[package]]
 name = "moos"
 version = "0.1.0"
+
+[[package]]
+name = "uefi"
+version = "0.1.0"

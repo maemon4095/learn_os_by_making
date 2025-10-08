@@ -1,14 +1,16 @@
 #![no_std]
 #![no_main]
 #![feature(offset_of)]
+#![feature(extern_types)]
 
 use core::{
+    marker::{PhantomData, PhantomPinned},
     mem::{offset_of, size_of},
     ptr::null_mut,
 };
 
 #[no_mangle]
-fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
+extern "efiapi" fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
     let efi_graphics_output_protocol = locate_graphics_protocol(efi_system_table).unwrap();
     let vram_addr = efi_graphics_output_protocol.mode.frame_buffer_base;
     let vram_byte_size = efi_graphics_output_protocol.mode.frame_buffer_size;
@@ -20,7 +22,9 @@ fn efi_main(_image_handle: EfiHandle, efi_system_table: &EfiSystemTable) {
         *e = 0xFFFFFF;
     }
 
-    loop {}
+    loop {
+        hlt();
+    }
 }
 
 fn locate_graphics_protocol<'a>(
@@ -42,16 +46,21 @@ fn locate_graphics_protocol<'a>(
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
+    loop {
+        hlt();
+    }
 }
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-struct EfiVoid(u8);
+struct EfiVoid {
+    _data: (),
+    _marker: PhantomData<(*mut u8, PhantomPinned)>,
+}
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-struct EfiHandle(u64);
+struct EfiHandle(*mut EfiVoid);
 
 #[repr(u64)]
 #[must_use]
@@ -59,6 +68,10 @@ struct EfiHandle(u64);
 enum EfiStatus {
     Success = 0,
 }
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct EfiGuid(pub u32, pub u16, pub u16, pub [u8; 8]);
 
 type LocateProtocol = extern "win64" fn(
     protocol: *const EfiGuid,
@@ -82,16 +95,12 @@ struct EfiSystemTable {
     pub boot_services: &'static EfiBootServicesTable,
 }
 
-const EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID: EfiGuid = EfiGuid {
-    0: 0x9042a9de,
-    1: 0x23dc,
-    2: 0x4a38,
-    3: [0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a],
-};
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct EfiGuid(pub u32, pub u16, pub u16, pub [u8; 8]);
+const EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID: EfiGuid = EfiGuid(
+    0x9042a9de,
+    0x23dc,
+    0x4a38,
+    [0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a],
+);
 
 #[repr(C)]
 #[derive(Debug)]
@@ -122,3 +131,7 @@ struct EfiGraphicsOutputProtocolPixelInfo {
 }
 
 const _: () = assert!(size_of::<EfiGraphicsOutputProtocolPixelInfo>() == 36);
+
+pub fn hlt() {
+    unsafe { core::arch::asm!("hlt") }
+}
